@@ -73,11 +73,10 @@ namespace SEParticles.Shapes
             circleDistance.X = Math.Abs(Center.X - bounds.X);
             circleDistance.Y = Math.Abs(Center.Y - bounds.Y);
 
-            if (circleDistance.X > (bounds.Z/2 + radius)) { return false; }
-            if (circleDistance.Y > (bounds.W/2 + radius)) { return false; }
-
-            if (circleDistance.X <= (bounds.Z/2)) { return true; } 
-            if (circleDistance.Y <= (bounds.W/2)) { return true; }
+            if (circleDistance.X > (bounds.Z/2 + radius) || circleDistance.Y > (bounds.W/2 + radius)) 
+                return false;
+            if (circleDistance.X <= (bounds.Z/2) || circleDistance.Y <= (bounds.W/2)) 
+                return true;
 
             float foo = (circleDistance.X - bounds.Z / 2) * (circleDistance.X - bounds.Z / 2);
             float bar = (circleDistance.Y - bounds.W / 2) * (circleDistance.Y - bounds.W / 2);
