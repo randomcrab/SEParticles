@@ -1,10 +1,15 @@
 ﻿using System;
-using System.Numerics;
-using System.Runtime.CompilerServices;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
-namespace SE
+#if MONOGAME
+using Microsoft.Xna.Framework;
+#endif
+
+namespace SE.Particles
 {
-    public static class ParticleMath
+    public static class ParticleHelper
     {
         public const float _PI = (float)Math.PI;
         public const float _PI_OVER180 = (float)Math.PI / 180;
@@ -15,49 +20,13 @@ namespace SE
         private const float _ONE_OVER_TWO = 1.0f / 2.0f;
         private const float _ONE_OVER_SIX = 1.0f / 6.0f;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Lerp(float value1, float value2, float amount)
-            => value1 + (value2 - value1) * amount;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Swap(ref float x, ref float y)
-        {
-            float tmpX = x;
-            x = y;
-            y = tmpX;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Clamp(float val, float min, float max)
-        {
-            if(val < min)
-                return min;
-            if(val > max)
-                return max;
-
-            return val;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Between(float min, float max, float ratio) 
-            => (min + ((max - min) * ratio));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetRatio(float min, float max, float val) 
-            => (val - min) / (max - min);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float ToRadians(float degrees)
-            => _PI_OVER180 * degrees;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float ToDegrees(float radians)
-            => radians * _180_OVER_PI;
-        
-        /* Color helper methods are thanks to Jiagg.
-             https://github.com/Jjagg/MgMercury/blob/master/Core/ColorHelper.cs
-           And MonoGame.Extended.
-             https://github.com/craftworkgames/MonoGame.Extended/blob/develop/Source/MonoGame.Extended/ColorHelper.cs */
+        public static Vector4 ToVector4(this Rectangle rectangle)
+            => new Vector4(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+    
+#if MONOGAME
+        public static Rectangle ToRectangle(this Vector4 vector)
+            => new Rectangle((int)vector.X, (int)vector.Y, (int)vector.Z, (int)vector.W);
+#endif
 
         public static Vector4 ToRgba(this Vector4 hsl) 
             => ToRgba(hsl.X, hsl.Y, hsl.Z, hsl.W);

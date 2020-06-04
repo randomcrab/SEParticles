@@ -2,11 +2,7 @@
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
-#if MONOGAME
-using Microsoft.Xna.Framework;
-#endif
-
-namespace SE
+namespace SE.Particles
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct Particle
@@ -21,7 +17,7 @@ namespace SE
         public float InitialLife;
         public float TimeAlive;
 #if MONOGAME
-        public Rectangle SourceRectangle; // Texture source rectangle.
+        public Vector4 SourceRectangle;   // Texture source rectangle. X, Y, Width, Height.
 #endif
 
         public static readonly int SizeInBytes = Marshal.SizeOf(typeof(Particle));
@@ -41,7 +37,7 @@ namespace SE
             TimeAlive = timeAlive;
             InitialLife = timeAlive;
 #if MONOGAME
-            SourceRectangle = Rectangle.Empty;
+            SourceRectangle = Vector4.Zero;
 #endif
         }
     }

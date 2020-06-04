@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Numerics;
-using SE.Shapes;
-using static SE.ParticleMath;
+using SE.Particles.Shapes;
+using static SE.Particles.ParticleMath;
 
-namespace SE.AreaModules
+namespace SE.Particles.AreaModules
 {
     public class ForceModule : AreaModule
     {
@@ -25,7 +25,7 @@ namespace SE.AreaModules
                     continue;
 
                 float distance = (Position - particle->Position).Length();
-                if (!(distance <= MaxDistance)) 
+                if (!(distance <= MaxDistance))
                     continue;
 
                 float ratio = GetRatio(MaxDistance, MinDistance, distance);

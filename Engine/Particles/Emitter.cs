@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using SE.AreaModules;
 using SE.Core;
-using SE.Modules;
-using SE.Shapes;
+using SE.Particles.AreaModules;
+using SE.Particles.Modules;
+using SE.Particles.Shapes;
 using SE.Utility;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 using Random = SE.Utility.Random;
-using static SE.ParticleMath;
+using static SE.Particles.ParticleMath;
 
 #if MONOGAME
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 #endif
 
-namespace SE
+namespace SE.Particles
 {
     /// <summary>
     /// Core of the particle engine. Emitters hold a buffer of particles, and a list of <see cref="ParticleModule"/>.
@@ -31,7 +30,7 @@ namespace SE
         public Vector2 Size;
 #if MONOGAME
         public Texture2D Texture;
-        public Rectangle StartRect; // TODO. Support sprite-sheet animations + random start sprite-sheet source rect.
+        public Vector4 StartRect; // TODO. Support sprite-sheet animations + random start sprite-sheet source rect.
 #endif
 
         internal HashSet<AreaModule> AreaModules = new HashSet<AreaModule>();
@@ -46,6 +45,11 @@ namespace SE
         public Vector2 Position {
             get => Shape.Center;
             set => Shape.Center = value;
+        }
+
+        public float Rotation {
+            get => Shape.Rotation;
+            set => Shape.Rotation = value;
         }
 
         public Vector4 Bounds { get; private set; } // X, Y, Width, Height
@@ -76,7 +80,7 @@ namespace SE
                 throw new InvalidOperationException("Particle engine has not been initialized. Call ParticleEngine.Initialize() first.");
 
             Config = new EmitterConfig();
-            Shape = shape ?? new PointShape();
+            Shape = shape ?? new PointEmitterShape();
             Size = size;
 
             Position = Vector2.Zero;
@@ -95,6 +99,7 @@ namespace SE
             for (int i = 0; i < capacity; i++) {
                 Particles[i] = Particle.Default;
             }
+            Enabled = true;
         }
 
         public Emitter(int capacity = 2048, IEmitterShape shape = null) 
@@ -192,7 +197,7 @@ namespace SE
                     return;
 
                 fixed (Particle* particle = &Particles[numActive++]) {
-                    Shape.Get(out particle->Position, out particle->Direction, (float)i / amount);
+                    Shape.Get((float)i / amount, out particle->Position, out particle->Direction);
                     particle->Position += Position;
                     particle->TimeAlive = 0.0f;
 #if MONOGAME
@@ -201,7 +206,7 @@ namespace SE
     
                     // Configure particle speed.
                     EmitterConfig.SpeedConfig speed = Config.Speed;
-                    switch (Config.Color.StartValueType) {
+                    switch (Config.Speed.StartValueType) {
                         case EmitterConfig.StartingValue.Normal: {
                             particle->Speed = speed.Min;
                         } break;
@@ -217,7 +222,7 @@ namespace SE
 
                     // Configure particle scale.
                     EmitterConfig.ScaleConfig scale = Config.Scale;
-                    switch (Config.Color.StartValueType) {
+                    switch (Config.Scale.StartValueType) {
                         case EmitterConfig.StartingValue.Normal: {
                             particle->Scale = scale.Min;
                         } break;
@@ -275,7 +280,7 @@ namespace SE
 
                     // Configure particle life.
                     EmitterConfig.LifeConfig life = Config.Life;
-                    switch (Config.Color.StartValueType) {
+                    switch (Config.Life.StartValueType) {
                         case EmitterConfig.StartingValue.Normal: {
                             particle->InitialLife = life.Min;
                         } break;
@@ -292,6 +297,54 @@ namespace SE
 
                 newParticles[numNew++] = numActive;
             }
+        }
+
+        public bool RemoveModule(ParticleModule module) 
+            => module == null 
+                ? throw new ArgumentNullException(nameof(module)) 
+                : modules.Remove(module);
+
+        public bool RemoveModules(params ParticleModule[] modules)
+        {
+            bool b = false;
+            for (int i = modules.Length - 1; i >= 0; i--) {
+                if (RemoveModule(modules[i])) {
+                    b = true;
+                }
+            }
+            return b;
+        }
+
+        public void RemoveModules<T>() where T : ParticleModule 
+            => RemoveModules(typeof(T));
+
+        public bool RemoveModules(Type moduleType)
+        {
+            if (RemoveModule(moduleType)) {
+                while (RemoveModule(moduleType)) { }
+                return true;
+            }
+            return false;
+        }
+
+        public bool RemoveModule<T>() where T : ParticleModule
+            => RemoveModule(typeof(T));
+
+        public bool RemoveModule(Type moduleType)
+        {
+            if (moduleType == null)
+                throw new ArgumentNullException(nameof(moduleType));
+            if (!moduleType.IsSubclassOf(typeof(ParticleModule)))
+                throw new ArgumentException("Type is not of particle module.", nameof(moduleType));
+
+            ParticleModule[] arr = modules.Array;
+            for (int i = modules.Count - 1; i >= 0; i--) {
+                if (arr[i].GetType() == moduleType) {
+                    modules.RemoveAt(i);
+                    return true;
+                }
+            }
+            return false;
         }
 
         public T GetModule<T>() where T : ParticleModule 
@@ -341,6 +394,12 @@ namespace SE
             modules.Add(module);
             module.Emitter = this;
             module.OnInitialize();
+        }
+
+        public void AddModules(params ParticleModule[] modules)
+        {
+            foreach (ParticleModule module in modules)
+                AddModule(module);
         }
 
         public Emitter DeepCopy()

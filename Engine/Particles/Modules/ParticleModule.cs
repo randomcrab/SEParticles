@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SE.Modules
+namespace SE.Particles.Modules
 {
     /// <summary>
     /// An object which modifies particles.

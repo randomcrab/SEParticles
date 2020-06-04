@@ -3,9 +3,9 @@ using System.Numerics;
 using SE.Engine.Utility;
 using SE.Utility;
 using Random = SE.Utility.Random;
-using static SE.ParticleMath;
+using static SE.Particles.ParticleMath;
 
-namespace SE.Modules
+namespace SE.Particles.Modules
 {
     public unsafe class ColorModule : ParticleModule
     {

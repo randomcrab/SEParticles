@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace SE.Shapes
+namespace SE.Particles.Shapes
 {
     /// <summary>
     /// Represents a shape.
@@ -9,6 +9,8 @@ namespace SE.Shapes
     {
         /// <summary>Approximate center of the shape.</summary>
         Vector2 Center { get; set; }
+        /// <summary>Shape rotation in radians.</summary>
+        float Rotation { get; set; }
     }
 
     /// <summary>
@@ -19,10 +21,10 @@ namespace SE.Shapes
         /// <summary>
         /// Calculates a position/offset and rotation for a new particle.
         /// </summary>
+        /// <param name="uniformRatio">Ratio for uniform emission.</param>
         /// <param name="position">Position for the new particle.</param>
         /// <param name="velocity">Velocity for the new particle.</param>
-        /// <param name="uniformRatio">Ratio for uniform emission.</param>
-        void Get(out Vector2 position, out Vector2 velocity, float uniformRatio);
+        void Get(float uniformRatio, out Vector2 position, out Vector2 velocity);
     }
 
     /// <summary>

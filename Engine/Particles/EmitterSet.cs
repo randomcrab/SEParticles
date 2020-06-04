@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using SE.Core;
 using SE.Utility;
 
-namespace SE
+namespace SE.Particles
 {
     public class EmitterSet : IDisposable
     {

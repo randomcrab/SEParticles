@@ -2,7 +2,7 @@
 using SE.Engine.Utility;
 using SE.Utility;
 
-namespace SE
+namespace SE.Particles
 {
     public class EmitterConfig
     {
