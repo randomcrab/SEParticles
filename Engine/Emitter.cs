@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using SE.AreaModules;
 using SE.Core;
 using SE.Modules;
@@ -14,7 +12,8 @@ using Random = SE.Utility.Random;
 using static SE.ParticleMath;
 
 #if MONOGAME
-
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 #endif
 
 namespace SE
