@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Xml.Schema;
 
-namespace SEParticles
+namespace SE
 {
     public static class ParticleMath
     {

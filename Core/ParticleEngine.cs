@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
+using SE.AreaModules;
+using SE.Shapes;
 using SE.Utility;
-using SEParticles.AreaModules;
-using SEParticles.Modules;
-using SEParticles.Shapes;
 using Vector2 = System.Numerics.Vector2;
 
-namespace SEParticles
+namespace SE.Core
 {
     public static class ParticleEngine
     {
@@ -96,7 +92,7 @@ namespace SEParticles
                     256.0f, 
                     1024.0f);
 
-                AreaModules.Add(mod);
+                //AreaModules.Add(mod);
 
                 //AttractorModule mod2 = new AttractorModule(new CircleShape(512.0f), new System.Numerics.Vector2(2048.0f, 1024.0f));
                 //AreaModules.Add(mod2);

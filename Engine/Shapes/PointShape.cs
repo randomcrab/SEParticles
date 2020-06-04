@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
+﻿using System.Numerics;
 using Random = SE.Utility.Random;
 
-namespace SEParticles.Shapes
+namespace SE.Shapes
 {
     public class PointShape : IEmitterShape, IIntersectable
     {

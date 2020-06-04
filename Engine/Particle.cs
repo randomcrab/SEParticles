@@ -1,15 +1,13 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using SE.Utility;
+﻿using System.Runtime.InteropServices;
+using Microsoft.Xna.Framework;
 using Vector2 = System.Numerics.Vector2;
-using Random = SE.Utility.Random;
 using Vector4 = System.Numerics.Vector4;
 
 #if MONOGAME
-using Microsoft.Xna.Framework;
+
 #endif
 
-namespace SEParticles
+namespace SE
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct Particle

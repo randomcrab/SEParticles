@@ -1,9 +1,9 @@
 ﻿using System;
 using SE.Utility;
 using Random = SE.Utility.Random;
-using static SEParticles.ParticleMath;
+using static SE.ParticleMath;
 
-namespace SEParticles.Modules
+namespace SE.Modules
 {
     public unsafe class SpriteRotationModule : ParticleModule
     {

@@ -1,21 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using SE.Utility;
-using SEParticles.Shapes;
 using System.Buffers;
-using SEParticles.AreaModules;
-using SEParticles.Modules;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using SE.AreaModules;
+using SE.Core;
+using SE.Modules;
+using SE.Shapes;
+using SE.Utility;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 using Random = SE.Utility.Random;
-using static SEParticles.ParticleMath;
+using static SE.ParticleMath;
 
 #if MONOGAME
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+
 #endif
 
-namespace SEParticles
+namespace SE
 {
     /// <summary>
     /// Core of the particle engine. Emitters hold a buffer of particles, and a list of <see cref="ParticleModule"/>.
@@ -166,16 +168,15 @@ namespace SEParticles
             if (index > numActive || index < 0)
                 throw new IndexOutOfRangeException(nameof(index));
 
-            numActive--;
-            if (index != numActive) {
-                Particles[index] = Particles[numActive];
+            fixed (Particle* particle = &Particles[index]) {
+                DeactivateParticleInternal(particle, index);
             }
         }
 
         // Higher performance deactivation function with fewer safety checks.
         private void DeactivateParticleInternal(Particle* particle, int index)
         {
-            particle->Position = new Vector2(-float.MaxValue, -float.MaxValue);
+            particle->Position = new Vector2(float.MinValue, float.MinValue);
             numActive--;
             if (index != numActive) {
                 Particles[index] = Particles[numActive];

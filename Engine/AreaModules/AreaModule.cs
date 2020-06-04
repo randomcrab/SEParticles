@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using SEParticles.Shapes;
+using SE.Core;
+using SE.Shapes;
 
-namespace SEParticles.AreaModules
+namespace SE.AreaModules
 {
     public abstract class AreaModule
     {

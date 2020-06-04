@@ -1,12 +1,9 @@
-﻿using SE.Core.Extensions;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Numerics;
-using System.Text;
-using SEParticles.Shapes;
-using static SEParticles.ParticleMath;
+using SE.Shapes;
+using static SE.ParticleMath;
 
-namespace SEParticles.AreaModules
+namespace SE.AreaModules
 {
     public class ForceModule : AreaModule
     {

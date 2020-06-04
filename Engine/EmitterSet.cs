@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using SE.Core;
 using SE.Utility;
 
-namespace SEParticles
+namespace SE
 {
     public class EmitterSet : IDisposable
     {

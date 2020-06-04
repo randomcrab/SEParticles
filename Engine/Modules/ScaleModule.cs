@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using Microsoft.Xna.Framework;
-using SE.Engine.Utility;
-using SE.Utility;
 using Random = SE.Utility.Random;
 using Curve = SE.Utility.Curve;
-using static SEParticles.ParticleMath;
+using static SE.ParticleMath;
 using Vector2 = System.Numerics.Vector2;
 
-namespace SEParticles.Modules
+namespace SE.Modules
 {
     public unsafe class ScaleModule : ParticleModule
     {

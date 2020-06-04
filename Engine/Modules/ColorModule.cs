@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Numerics;
-using SE.Core.Extensions;
 using SE.Engine.Utility;
 using SE.Utility;
 using Random = SE.Utility.Random;
-using static SEParticles.ParticleMath;
+using static SE.ParticleMath;
 
-namespace SEParticles.Modules
+namespace SE.Modules
 {
     public unsafe class ColorModule : ParticleModule
     {

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
 using SE.Core.Extensions;
 using Random = SE.Utility.Random;
-using static SEParticles.ParticleMath;
+using static SE.ParticleMath;
 
-namespace SEParticles.Shapes
+namespace SE.Shapes
 {
     public class CircleShape : IEmitterShape, IIntersectable
     {

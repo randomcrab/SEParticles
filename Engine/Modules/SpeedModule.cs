@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Numerics;
-using SE.Core.Extensions;
 using SE.Utility;
 using Random = SE.Utility.Random;
 
-namespace SEParticles.Modules
+namespace SE.Modules
 {
     public unsafe class SpeedModule : ParticleModule
     {
