@@ -16,6 +16,11 @@ namespace SE.Particles
         private const float _ONE_OVER_TWO = 1.0f / 2.0f;
         private const float _ONE_OVER_SIX = 1.0f / 6.0f;
 
+        public static Vector2 UpDirection => new Vector2(0.00000000f, -1.00000000f);
+        public static Vector2 RightDirection => new Vector2(1.00000000f, 0.00000367f);
+        public static Vector2 DownDirection => new Vector2(0.00000265f, 1.00000000f);
+        public static Vector2 LeftDirection => new Vector2(-1.00000000f, -0.00000102f);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Lerp(float value1, float value2, float amount)
             => value1 + (value2 - value1) * amount;

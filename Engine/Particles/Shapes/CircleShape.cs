@@ -79,8 +79,8 @@ namespace SE.Particles.Shapes
         public bool EdgeOnly;
         public bool Uniform;
 
-        public CircleEmitterShape(float radius, EmissionDirection direction = EmissionDirection.None, bool edgeOnly = false, 
-            bool uniform = false, float angleRatio = 1.0f) : base(radius, angleRatio)
+        public CircleEmitterShape(float radius, EmissionDirection direction = EmissionDirection.None, 
+            bool edgeOnly = false, bool uniform = false, float angleRatio = 1.0f) : base(radius, angleRatio)
         {
             Direction = direction;
             EdgeOnly = edgeOnly;
@@ -95,10 +95,12 @@ namespace SE.Particles.Shapes
                 : Random.Next(0.0f, Radius);
 
             if (IsFullCircle) {
+                // Optimized algorithm for full 360 degree circle.
                 rotation = Uniform
                     ? Between(-_PI, _PI, uniformRatio) 
                     : Random.NextAngle();
             } else {
+                // Slower algorithm for semicircles.
                 rotation = Uniform
                     ? Between(-_PI, -_PI + (_2PI * AngleRatio), uniformRatio) + Rotation
                     : Random.NextAngle(AngleRatio) + Rotation;

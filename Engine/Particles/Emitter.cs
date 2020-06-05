@@ -24,9 +24,9 @@ namespace SE.Particles
     {
         public IAdditionalData AdditionalData;
         public IEmitterShape Shape;
+        public Space Space = Space.Local;
 
         public EmitterConfig Config;
-
         public Vector2 Size;
 #if MONOGAME
         public Texture2D Texture;
@@ -37,10 +37,13 @@ namespace SE.Particles
         internal int ParticleEngineIndex = -1;
         internal Particle[] Particles;
         
-        private QuickList<ParticleModule> modules = new QuickList<ParticleModule>();
+        private PooledList<ParticleModule> modules = new PooledList<ParticleModule>(ParticleEngine.UseArrayPool);
         private int[] newParticles;
         private int numActive;
         private int numNew;
+        private Vector2 lastPosition;
+        private bool isDisposed;
+        private bool firstUpdate = true;
 
         public Vector2 Position {
             get => Shape.Center;
@@ -53,6 +56,7 @@ namespace SE.Particles
         }
 
         public Vector4 Bounds { get; private set; } // X, Y, Width, Height
+
         public int ParticlesLength => Particles.Length;
         public ref Particle GetParticle(int index) => ref Particles[index];
         public Span<Particle> ActiveParticles => new Span<Particle>(Particles, 0, numActive);
@@ -108,9 +112,12 @@ namespace SE.Particles
         internal void Update(float deltaTime)
         {
             ParticleModule[] modules = this.modules.Array;
+            if (firstUpdate) {
+                lastPosition = Position;
+                firstUpdate = false;
+            }
 
-            // Update shape center.
-            Shape.Center = Position;
+            // Update bounds.
             Bounds = new Vector4(Position.X - (Size.X / 2), Position.Y - (Size.Y / 2), Size.X, Size.Y);
 
             // Inform the modules of newly activated particles.
@@ -146,10 +153,23 @@ namespace SE.Particles
 
                 // Update particle positions.
                 tail = ptr + numActive;
-                for (Particle* particle = ptr; particle < tail; particle++) {
-                    particle->Position += particle->Direction * particle->Speed * deltaTime;
+                switch (Space) {
+                    case Space.World: {
+                        for (Particle* particle = ptr; particle < tail; particle++) {
+                            particle->Position += particle->Direction * particle->Speed * deltaTime;
+                        }
+                    } break;
+                    case Space.Local: {
+                        for (Particle* particle = ptr; particle < tail; particle++) {
+                            particle->Position += (particle->Direction * particle->Speed * deltaTime) + (Position - lastPosition);
+                        }
+                    } break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
+
+            lastPosition = Position;
         }
 
         internal void CheckParticleIntersections(QuickList<Particle> list, AreaModule areaModule)
@@ -416,17 +436,33 @@ namespace SE.Particles
 
         public void Dispose()
         {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(isDisposed)
+                return;
+
             Enabled = false;
             switch (ParticleEngine.AllocationMode) {
                 case ParticleAllocationMode.ArrayPool:
-                    ArrayPool<Particle>.Shared.Return(Particles, true);
-                    ArrayPool<int>.Shared.Return(newParticles, true);
+                    ArrayPool<Particle>.Shared.Return(Particles);
+                    ArrayPool<int>.Shared.Return(newParticles);
                     break;
                 case ParticleAllocationMode.Array:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            modules.Dispose();
+            isDisposed = true;
         }
+    }
+
+    public enum Space
+    {
+        World,
+        Local
     }
 }

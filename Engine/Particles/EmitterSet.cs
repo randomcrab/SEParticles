@@ -7,7 +7,8 @@ namespace SE.Particles
 {
     public class EmitterSet : IDisposable
     {
-        private QuickList<Emitter> Emitters { get; } = new QuickList<Emitter>();
+        private PooledList<Emitter> Emitters { get; } = new PooledList<Emitter>(ParticleEngine.UseArrayPool);
+        private bool isDisposed;
 
         public EmitterSet()
         {
@@ -59,9 +60,19 @@ namespace SE.Particles
 
         public void Dispose()
         {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if(isDisposed)
+                return;
+
             foreach (IDisposable disposable in Emitters) {
                 disposable.Dispose();
             }
+            Emitters.Dispose();
+            isDisposed = true;
         }
     }
 }

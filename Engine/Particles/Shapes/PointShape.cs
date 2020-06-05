@@ -1,5 +1,8 @@
-﻿using System.Numerics;
+﻿using Microsoft.Xna.Framework;
+using System.Numerics;
 using Random = SE.Utility.Random;
+using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
 
 namespace SE.Particles.Shapes
 {
@@ -8,15 +11,14 @@ namespace SE.Particles.Shapes
         public Vector2 Center { get; set; }
         public float Rotation { get; set; }
 
-        public bool Intersects(Vector2 point)
-        {
-            return point == Center;
-        }
+        public bool Intersects(Vector2 point) 
+            => point == Center;
 
         public bool Intersects(Vector4 bounds)
-        {
-            return false;
-        }
+            => bounds.X <= Center.X 
+               && Center.X < bounds.X + bounds.Z
+               && bounds.Y <= Center.Y 
+               && Center.Y < bounds.Y + bounds.W;
     }
 
     public class PointEmitterShape : PointShape, IEmitterShape

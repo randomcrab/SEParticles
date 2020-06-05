@@ -13,6 +13,8 @@ namespace SE.Core
         public static readonly QuickList<Emitter> Emitters = new QuickList<Emitter>();
         public static readonly QuickList<AreaModule> AreaModules = new QuickList<AreaModule>();
 
+        public static bool UseArrayPool => AllocationMode == ParticleAllocationMode.ArrayPool;
+
         public static int ParticleCount { 
             get  { 
                 int total = 0;
@@ -93,7 +95,7 @@ namespace SE.Core
                     256.0f, 
                     1024.0f);
 
-                AreaModules.Add(mod);
+                //AreaModules.Add(mod);
 
                 //AttractorModule mod2 = new AttractorModule(new CircleShape(512.0f), new System.Numerics.Vector2(2048.0f, 1024.0f));
                 //AreaModules.Add(mod2);
