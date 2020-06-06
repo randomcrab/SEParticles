@@ -24,7 +24,7 @@ namespace SE.Particles
     {
         public IAdditionalData AdditionalData;
         public IEmitterShape Shape;
-        public Space Space = Space.Local;
+        public Space Space = Space.World;
 
         public EmitterConfig Config;
         public Vector2 Size;
