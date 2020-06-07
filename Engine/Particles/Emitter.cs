@@ -35,6 +35,7 @@ namespace SE.Particles
 
         internal HashSet<AreaModule> AreaModules = new HashSet<AreaModule>();
         internal int ParticleEngineIndex = -1;
+        internal float TimeToLive;
         internal Particle[] Particles;
         
         private PooledList<ParticleModule> modules = new PooledList<ParticleModule>(ParticleEngine.UseArrayPool);
@@ -432,6 +433,12 @@ namespace SE.Particles
                 emitter.AddModule(modules.Array[i].DeepCopy());
             }
             return emitter;
+        }
+
+        public void DisposeAfter(float? time = null)
+        {
+            TimeToLive = time ?? Config.Life.maxLife;
+            ParticleEngine.DestroyPending(this);
         }
 
         public void Dispose()

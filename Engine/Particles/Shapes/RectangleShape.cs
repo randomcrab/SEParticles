@@ -44,17 +44,11 @@ namespace SE.Particles.Shapes
         private void UpdateBounds() 
             => Bounds = new Vector4(center.X - (size.X / 2.0f), center.Y - (size.Y / 2.0f), size.X, size.Y);
 
-        public bool Intersects(Vector2 point) 
-            => Bounds.X <= point.X 
-               && point.X < Bounds.X + Bounds.Z 
-               && Bounds.Y <= point.Y 
-               && point.Y < Bounds.Y + Bounds.W;
+        public bool Intersects(Vector2 point)
+            => Bounds.Intersects(point);
 
-        public bool Intersects(Vector4 otherBounds) 
-            => Bounds.X <= otherBounds.X 
-               && otherBounds.X + otherBounds.Z <= Bounds.X + Bounds.Z
-               && Bounds.Y <= otherBounds.Y
-               && otherBounds.Y + otherBounds.W <= Bounds.Y + Bounds.W;
+        public bool Intersects(Vector4 otherBounds)
+            => Bounds.Intersects(otherBounds);
     }
 
     public class RectangleEmitterShape : RectangleShape, IEmitterShape
@@ -85,28 +79,29 @@ namespace SE.Particles.Shapes
             // Continue if the emission is edge only.
             float totalLength = (Bounds.Z * 2.0f) + (Bounds.W * 2.0f);
             float len = Uniform 
-                ? uniformRatio * totalLength 
+                ? uniformRatio * totalLength
                 : Random.Next(totalLength);
 
             // Get position from rectangle edges from specified length.
-            if (len < Bounds.Z) {
+            Vector4 bounds = Bounds;
+            if (len < bounds.Z) {
                 // Up.
-                position = new Vector2(Bounds.X + len, Bounds.Y);
+                position = new Vector2(bounds.X + len, bounds.Y);
                 velocity = UpDirection;
-            } else if (len < Bounds.W + Bounds.Z) {
+            } else if (len < bounds.W + bounds.Z) {
                 // Right.
-                len -= Bounds.Z;
-                position = new Vector2(Bounds.X + Bounds.Z, Bounds.Y + len);
+                len -= bounds.Z;
+                position = new Vector2(bounds.X + bounds.Z, bounds.Y + len);
                 velocity = RightDirection;
-            } else if (len < Bounds.Z + Bounds.W + Bounds.Z) {
+            } else if (len < bounds.Z + bounds.W + bounds.Z) {
                 // Down.
-                len -= Bounds.W + Bounds.Z;
-                position = new Vector2((Bounds.X + Bounds.Z) - len, Bounds.Y + Bounds.W);
+                len -= bounds.W + bounds.Z;
+                position = new Vector2((bounds.X + bounds.Z) - len, bounds.Y + bounds.W);
                 velocity = DownDirection;
             } else {
                 // Left.
-                len -= Bounds.Z + Bounds.W + Bounds.Z;
-                position = new Vector2(Bounds.X, (Bounds.Y + Bounds.W) - len);
+                len -= bounds.Z + bounds.W + bounds.Z;
+                position = new Vector2(bounds.X, (bounds.Y + bounds.W) - len);
                 velocity = LeftDirection;
             }
             position -= Center;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using SE.Core.Extensions;
 using System.Numerics;
 using Random = SE.Utility.Random;
 using Vector2 = System.Numerics.Vector2;
@@ -15,10 +16,7 @@ namespace SE.Particles.Shapes
             => point == Center;
 
         public bool Intersects(Vector4 bounds)
-            => bounds.X <= Center.X 
-               && Center.X < bounds.X + bounds.Z
-               && bounds.Y <= Center.Y 
-               && Center.Y < bounds.Y + bounds.W;
+            => bounds.Intersects(Center);
     }
 
     public class PointEmitterShape : PointShape, IEmitterShape

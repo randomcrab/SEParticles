@@ -123,10 +123,13 @@ namespace SE.Particles
             public float Min, Max;
             public Curve Curve;
 
+            public float maxLife;
+
             public void SetNormal(float value)
             {
                 Min = value;
                 StartValueType = StartingValue.Normal;
+                maxLife = Min;
             }
 
             public void SetRandomBetween(float min, float max)
@@ -134,12 +137,21 @@ namespace SE.Particles
                 Min = min;
                 Max = max;
                 StartValueType = StartingValue.Random;
+                maxLife = max;
             }
 
             public void SetRandomCurve(Curve curve)
             {
                 Curve = curve;
                 StartValueType = StartingValue.RandomCurve;
+
+                float maxFound = 0.0f;
+                foreach (CurveKey curveKey in curve.Keys) {
+                    if (curveKey.Value > maxFound) {
+                        maxFound = curveKey.Value;
+                    }
+                }
+                maxLife = maxFound;
             }
 
             public LifeConfig DeepCopy() 

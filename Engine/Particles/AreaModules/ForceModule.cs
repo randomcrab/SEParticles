@@ -25,7 +25,7 @@ namespace SE.Particles.AreaModules
                     continue;
 
                 float distance = (Position - particle->Position).Length();
-                if (!(distance <= MaxDistance))
+                if (distance > MaxDistance)
                     continue;
 
                 float ratio = GetRatio(MaxDistance, MinDistance, distance);

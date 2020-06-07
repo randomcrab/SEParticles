@@ -40,8 +40,9 @@ namespace SE.Core
         /// <summary>Controls how the particle engine updates.</summary>
         public static UpdateMode UpdateMode = UpdateMode.ParallelAsynchronous;
 
-        internal static bool Initialized = false;
+        internal static bool Initialized;
 
+        private static QuickList<Emitter> pendingDestroy = new QuickList<Emitter>();
         private static Task updateTask;
         private static bool temp = true;
 
@@ -95,12 +96,21 @@ namespace SE.Core
                     256.0f, 
                     1024.0f);
 
-                //AreaModules.Add(mod);
+                AreaModules.Add(mod);
 
                 //AttractorModule mod2 = new AttractorModule(new CircleShape(512.0f), new System.Numerics.Vector2(2048.0f, 1024.0f));
                 //AreaModules.Add(mod2);
 
                 temp = false;
+            }
+
+            Emitter[] pendingDestroyArray = pendingDestroy.Array;
+            for (int i = pendingDestroy.Count - 1; i >= 0; i--) {
+                Emitter emitter = pendingDestroyArray[i];
+                emitter.TimeToLive -= deltaTime;
+                if (emitter.TimeToLive <= 0.0f) {
+                    emitter.Dispose();
+                }
             }
         }
 
@@ -157,6 +167,7 @@ namespace SE.Core
             foreach (AreaModule aModule in emitter.AreaModules) {
                 aModule.AttachedEmitters.Remove(emitter);
             }
+            pendingDestroy.Remove(emitter);
         }
 
         internal static void AddAreaModule(AreaModule module)
@@ -179,6 +190,11 @@ namespace SE.Core
                 e.AreaModules.Remove(module);
             }
         }
+
+        internal static void DestroyPending(Emitter emitter)
+        {
+            pendingDestroy.Add(emitter);
+        }
     }
 
     /// <summary>
@@ -195,8 +211,6 @@ namespace SE.Core
         ///          Most useful when creating and destroying many particle emitters at runtime.
         ///          However, this option may result in a buildup of memory usage due to how ArrayPool.Shared internally works.</summary>
         ArrayPool
-
-        // TODO: AllocHGlobal mode?
     }
 
     /// <summary>
