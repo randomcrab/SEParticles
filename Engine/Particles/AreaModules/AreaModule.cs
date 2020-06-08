@@ -8,7 +8,7 @@ namespace SE.Particles.AreaModules
     public abstract class AreaModule
     {
         internal bool AddedToEngine = false;
-        internal HashSet<Emitter> AttachedEmitters = new HashSet<Emitter>();
+        private HashSet<Emitter> AttachedEmitters = new HashSet<Emitter>();
 
         public Vector2 Position {
             get => Shape.Center;
@@ -35,6 +35,24 @@ namespace SE.Particles.AreaModules
             if (position.HasValue) {
                 Position = position.Value;
             }
+        }
+
+        internal void AddEmitter(Emitter e)
+        {
+            lock (AttachedEmitters)
+                AttachedEmitters.Add(e);
+        }
+
+        internal void RemoveEmitter(Emitter e)
+        {
+            lock (AttachedEmitters)
+                AttachedEmitters.Remove(e);
+        }
+
+        internal HashSet<Emitter> GetEmitters()
+        {
+            lock(AttachedEmitters)
+                return AttachedEmitters;
         }
 
         public abstract unsafe void ProcessParticles(float deltaTime, Particle* particles, int length);

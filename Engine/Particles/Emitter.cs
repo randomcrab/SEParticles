@@ -33,11 +33,11 @@ namespace SE.Particles
         public Vector4 StartRect; // TODO. Support sprite-sheet animations + random start sprite-sheet source rect.
 #endif
 
-        internal HashSet<AreaModule> AreaModules = new HashSet<AreaModule>();
         internal int ParticleEngineIndex = -1;
         internal float TimeToLive;
         internal Particle[] Particles;
         
+        private HashSet<AreaModule> areaModules = new HashSet<AreaModule>();
         private PooledList<ParticleModule> modules = new PooledList<ParticleModule>(ParticleEngine.UseArrayPool);
         private int[] newParticles;
         private int numActive;
@@ -148,7 +148,7 @@ namespace SE.Particles
                 }
 
                 // Update the area modules influencing this emitter.
-                foreach (AreaModule areaModule in AreaModules) {
+                foreach (AreaModule areaModule in areaModules) {
                     areaModule.ProcessParticles(deltaTime, ptr, numActive);
                 }
 
@@ -421,6 +421,25 @@ namespace SE.Particles
         {
             foreach (ParticleModule module in modules)
                 AddModule(module);
+        }
+
+        
+        internal void AddAreaModule(AreaModule mod)
+        {
+            lock (areaModules)
+                areaModules.Add(mod);
+        }
+
+        internal void RemoveAreaModule(AreaModule mod)
+        {
+            lock (areaModules)
+                areaModules.Remove(mod);
+        }
+
+        internal HashSet<AreaModule> GetAreaModules()
+        {
+            lock (areaModules)
+                return areaModules;
         }
 
         public Emitter DeepCopy()

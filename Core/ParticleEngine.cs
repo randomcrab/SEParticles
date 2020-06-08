@@ -39,8 +39,7 @@ namespace SE.Core
 
         /// <summary>Controls how the particle engine updates.</summary>
         public static UpdateMode UpdateMode = UpdateMode.ParallelAsynchronous;
-
-        internal static bool Initialized;
+        public static bool Initialized { get; private set; }
 
         private static QuickList<Emitter> pendingDestroy = new QuickList<Emitter>();
         private static Task updateTask;
@@ -70,11 +69,11 @@ namespace SE.Core
                         for (int i = 0; i < Emitters.Count; i++) {
                             Emitter e = Emitters.Array[i];
                             if (aMod.Shape.Intersects(e.Bounds)) {
-                                e.AreaModules.Add(aMod);
-                                aMod.AttachedEmitters.Add(e);
+                                e.AddAreaModule(aMod);
+                                aMod.AddEmitter(e);
                             } else {
-                                e.AreaModules.Remove(aMod);
-                                aMod.AttachedEmitters.Remove(e);
+                                e.RemoveAreaModule(aMod);
+                                aMod.RemoveEmitter(e);
                             }
                         }
                     }
@@ -118,14 +117,14 @@ namespace SE.Core
         {
             updateTask = Task.Factory.StartNew(() => {
                 // Update area modules.
-                Parallel.ForEach(AreaModules, module => {
+                Parallel.ForEach(AreaModules, aMod => {
                     foreach (Emitter e in Emitters) {
-                        if (module.Shape.Intersects(e.Bounds)) {
-                            e.AreaModules.Add(module);
-                            module.AttachedEmitters.Add(e);
+                        if (aMod.Shape.Intersects(e.Bounds)) {
+                            e.AddAreaModule(aMod);
+                            aMod.AddEmitter(e);
                         } else {
-                            e.AreaModules.Remove(module);
-                            module.AttachedEmitters.Remove(e);
+                            e.RemoveAreaModule(aMod);
+                            aMod.RemoveEmitter(e);
                         }
                     }
                 });
@@ -152,8 +151,8 @@ namespace SE.Core
 
             emitter.ParticleEngineIndex = Emitters.Count;
             Emitters.Add(emitter);
-            foreach (AreaModule aModule in emitter.AreaModules) {
-                aModule.AttachedEmitters.Add(emitter);
+            foreach (AreaModule aModule in emitter.GetAreaModules()) {
+                aModule.AddEmitter(emitter);
             }
         }
 
@@ -164,8 +163,8 @@ namespace SE.Core
 
             Emitters.Remove(emitter);
             emitter.ParticleEngineIndex = -1;
-            foreach (AreaModule aModule in emitter.AreaModules) {
-                aModule.AttachedEmitters.Remove(emitter);
+            foreach (AreaModule aModule in emitter.GetAreaModules()) {
+                aModule.RemoveEmitter(emitter);
             }
             pendingDestroy.Remove(emitter);
         }
@@ -177,8 +176,8 @@ namespace SE.Core
 
             module.AddedToEngine = true;
             AreaModules.Add(module);
-            foreach (Emitter e in module.AttachedEmitters) {
-                e.AreaModules.Add(module);
+            foreach (Emitter e in module.GetEmitters()) {
+                e.AddAreaModule(module);
             }
         }
 
@@ -186,8 +185,8 @@ namespace SE.Core
         {
             module.AddedToEngine = false;
             AreaModules.Remove(module);
-            foreach (Emitter e in module.AttachedEmitters) {
-                e.AreaModules.Remove(module);
+            foreach (Emitter e in module.GetEmitters()) {
+                e.RemoveAreaModule(module);
             }
         }
 
