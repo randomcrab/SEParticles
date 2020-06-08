@@ -219,15 +219,15 @@ namespace SE.Core
     {
         /// <summary>Update is done using Parallel loops, within tasks. ParticleEngine.WaitForThreads() must be called when the state
         ///          is to be synchronized. For example, ParticleEngine.WaitForThreads() would be called before you render or query the particles.
-        ///          Results in better performance on machines with 2+ cores.</summary>
+        ///          Results in better performance on machines with >2 cores.</summary>
         ParallelAsynchronous,
 
-        /// <summary>Update is done synchronously using Parallel loops. Results in betters performance on machines with 2+ cores.
+        /// <summary>Update is done synchronously using Parallel loops. Results in betters performance on machines with >2 cores.
         ///          State is synchronized immediately after Update() has finished processing.</summary>
         ParallelSynchronous,
 
         /// <summary>Update is done synchronously on whatever thread Update() was called from. Results in lower performance on machines with
-        ///          2+ cores, and potentially better performance on machines with 1-2 cores.</summary>
+        ///          >2 cores, and potentially better performance on machines with 1-2 cores.</summary>
         Synchronous
     }
 }
