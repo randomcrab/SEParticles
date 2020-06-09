@@ -7,11 +7,29 @@ namespace SE.Particles.AreaModules
 {
     public class ForceModule : AreaModule
     {
-        public float MaxDistance = 4096.0f;
-        public float MinDistance = 128.0f;
+        public float MaxDistance {
+            get => maxDistance;
+            set => maxDistance = Clamp(value, minDistance, float.MaxValue);
+        }
+        private float maxDistance = float.MaxValue;
 
-        public float Intensity = 25.0f;
-        public float SpeedIncrease = 12.0f;
+        public float MinDistance {
+            get => minDistance;
+            set => minDistance = Clamp(value, 0.0f, MaxDistance);
+        }
+        private float minDistance;
+
+        public float Intensity {
+            get => intensity;
+            set => intensity = Clamp(value, 0.0f, float.MaxValue);
+        }
+        private float intensity = 25.0f;
+
+        public float SpeedIncrease {
+            get => speedIncrease;
+            set => speedIncrease = Clamp(value, 0.0f, float.MaxValue);
+        }
+        private float speedIncrease = 12.0f;
 
         private Mode mode = Mode.Attract;
 
@@ -25,17 +43,17 @@ namespace SE.Particles.AreaModules
                     continue;
 
                 float distance = (Position - particle->Position).Length();
-                if (distance > MaxDistance)
+                if (distance > maxDistance)
                     continue;
 
-                float ratio = GetRatio(MaxDistance, MinDistance, distance);
-                float speedDelta = SpeedIncrease * ratio;
+                float ratio = GetRatio(maxDistance, minDistance, distance);
+                float speedDelta = speedIncrease * ratio;
                 GetAngle(particle->Position, Position, out Vector2 direction, out float angle);
                 if(mode == Mode.Repel)
                     direction = -direction;
 
-                particle->Direction = Vector2.Lerp(particle->Direction, direction, ratio * Intensity * deltaTime);
-                particle->SpriteRotation = Lerp(particle->SpriteRotation, angle, ratio * Intensity * deltaTime);
+                particle->Direction = Vector2.Lerp(particle->Direction, direction, ratio * intensity * deltaTime);
+                particle->SpriteRotation = Lerp(particle->SpriteRotation, angle, ratio * intensity * deltaTime);
                 particle->Speed += speedDelta;
             }
         }
@@ -54,8 +72,8 @@ namespace SE.Particles.AreaModules
             float intensity = 10.0f, float speedIncrease = 10.0f) 
             => new ForceModule(shape) {
                 Position = position,
-                MinDistance = minDistance,
                 MaxDistance = maxDistance,
+                MinDistance = minDistance,
                 Intensity = intensity,
                 SpeedIncrease = speedIncrease,
                 mode = Mode.Attract
