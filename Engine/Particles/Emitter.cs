@@ -27,7 +27,16 @@ namespace SE.Particles
         public Space Space = Space.World;
 
         public EmitterConfig Config;
-        public Vector2 Size;
+
+        public Vector2 Size {
+            get => size;
+            set {
+                size = value;
+                Bounds = new Vector4(Position.X - (size.X / 2.0f), Position.Y - (size.Y / 2.0f), size.X, size.Y);
+            }
+        }
+        private Vector2 size;
+
 #if MONOGAME
         public Texture2D Texture;
         public Vector4 StartRect; // TODO. Support sprite-sheet animations + random start sprite-sheet source rect.
@@ -48,7 +57,10 @@ namespace SE.Particles
 
         public Vector2 Position {
             get => Shape.Center;
-            set => Shape.Center = value;
+            set {
+                Shape.Center = value;
+                Bounds = new Vector4(Position.X - (size.X / 2.0f), Position.Y - (size.Y / 2.0f), size.X, size.Y);
+            }
         }
 
         public float Rotation {
@@ -87,7 +99,6 @@ namespace SE.Particles
             Config = new EmitterConfig();
             Shape = shape ?? new PointEmitterShape();
             Size = size;
-
             Position = Vector2.Zero;
             switch (ParticleEngine.AllocationMode) {
                 case ParticleAllocationMode.ArrayPool:
@@ -182,6 +193,12 @@ namespace SE.Particles
                     list.Add(particle);
                 }
             }
+        }
+
+        public void Clear()
+        {
+            numActive = 0;
+            numNew = 0;
         }
 
         /// <summary>

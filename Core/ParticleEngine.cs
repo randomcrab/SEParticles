@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Numerics;
 using System.Threading.Tasks;
+using SE.Core.Extensions;
 using SE.Particles;
 using SE.Particles.AreaModules;
 using SE.Particles.Shapes;
@@ -11,6 +13,7 @@ namespace SE.Core
     public static class ParticleEngine
     {
         public static readonly QuickList<Emitter> Emitters = new QuickList<Emitter>();
+        public static readonly QuickList<Emitter> VisibleEmitters = new QuickList<Emitter>();
         public static readonly QuickList<AreaModule> AreaModules = new QuickList<AreaModule>();
 
         public static bool UseArrayPool => AllocationMode == ParticleAllocationMode.ArrayPool;
@@ -41,6 +44,7 @@ namespace SE.Core
         public static UpdateMode UpdateMode = UpdateMode.ParallelAsynchronous;
         public static bool Initialized { get; private set; }
 
+        private static Vector4[] tmpViewArr = new Vector4[1];
         private static QuickList<Emitter> pendingDestroy = new QuickList<Emitter>();
         private static Task updateTask;
         private static bool temp = true;
@@ -50,11 +54,18 @@ namespace SE.Core
             Initialized = true;
         }
 
-        public static void Update(float deltaTime)
+        public static void Update(float deltaTime, Vector4 viewBounds)
+        {
+            tmpViewArr[0] = viewBounds;
+            Update(deltaTime, tmpViewArr);
+        }
+
+        public static void Update(float deltaTime, Span<Vector4> viewBounds = default)
         {
             if (!Initialized)
                 throw new InvalidOperationException("Particle engine has not been initialized. Call ParticleEngine.Initialize() first.");
 
+            FindVisible(viewBounds);
             switch (UpdateMode) {
                 case UpdateMode.ParallelAsynchronous: {
                     CreateTasks(deltaTime);
@@ -79,8 +90,8 @@ namespace SE.Core
                     }
 
                     // Update emitters.
-                    for (int i = 0; i < Emitters.Count; i++) {
-                        Emitters.Array[i].Update(deltaTime);
+                    for (int i = 0; i < VisibleEmitters.Count; i++) {
+                        VisibleEmitters.Array[i].Update(deltaTime);
                     }
                 } break;
                 default:
@@ -103,12 +114,22 @@ namespace SE.Core
                 temp = false;
             }
 
-            Emitter[] pendingDestroyArray = pendingDestroy.Array;
-            for (int i = pendingDestroy.Count - 1; i >= 0; i--) {
-                Emitter emitter = pendingDestroyArray[i];
-                emitter.TimeToLive -= deltaTime;
-                if (emitter.TimeToLive <= 0.0f) {
-                    emitter.Dispose();
+            DestroyPending(deltaTime);
+        }
+
+        private static void FindVisible(Span<Vector4> viewBounds)
+        {
+            VisibleEmitters.Clear();
+            if (viewBounds == default) {
+                VisibleEmitters.AddRange(Emitters);
+            } else {
+                for (int i = 0; i < Emitters.Count; i++) {
+                    Emitter emitter = Emitters.Array[i];
+                    if (CheckIntersection(emitter.Bounds, viewBounds)) {
+                        VisibleEmitters.Add(emitter);
+                    } else {
+                        emitter.Clear();
+                    }
                 }
             }
         }
@@ -130,8 +151,23 @@ namespace SE.Core
                 });
             }).ContinueWith((t1) => {
                 // Update emitters.
-                Parallel.ForEach(Emitters, emitter => { emitter.Update(deltaTime); });
+                Parallel.ForEach(VisibleEmitters, emitter => {
+                    emitter.Update(deltaTime);
+                });
             });
+        }
+
+
+        private static void DestroyPending(float deltaTime)
+        {
+            Emitter[] pendingDestroyArray = pendingDestroy.Array;
+            for (int i = pendingDestroy.Count - 1; i >= 0; i--) {
+                Emitter emitter = pendingDestroyArray[i];
+                emitter.TimeToLive -= deltaTime;
+                if (emitter.TimeToLive <= 0.0f) {
+                    emitter.Dispose();
+                }
+            }
         }
 
         public static void WaitForThreads()
@@ -193,6 +229,16 @@ namespace SE.Core
         internal static void DestroyPending(Emitter emitter)
         {
             pendingDestroy.Add(emitter);
+        }
+
+        private static bool CheckIntersection(Vector4 bounds, Span<Vector4> otherBounds)
+        {
+            for (int i = 0; i < otherBounds.Length; i++) {
+                if (bounds.Intersects(otherBounds[i])) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
