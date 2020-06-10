@@ -234,7 +234,9 @@ namespace SE.Particles
                 if (numActive + 1 > Particles.Length)
                     return;
 
-                fixed (Particle* particle = &Particles[numActive++]) {
+                // NOTE: Was ++.
+                // fixed (Particle* particle = &Particles[numActive++]) {
+                fixed (Particle* particle = &Particles[numActive]) {
                     Shape.Get((float)i / amount, out particle->Position, out particle->Direction);
                     particle->Position += Position;
                     particle->TimeAlive = 0.0f;
@@ -334,6 +336,7 @@ namespace SE.Particles
                 }
 
                 newParticles[numNew++] = numActive;
+                numActive++;
             }
         }
 
