@@ -106,7 +106,7 @@ namespace SE.Core
                     256.0f, 
                     1024.0f);
 
-                //AreaModules.Add(mod);
+                AreaModules.Add(mod);
 
                 //AttractorModule mod2 = new AttractorModule(new CircleShape(512.0f), new System.Numerics.Vector2(2048.0f, 1024.0f));
                 //AreaModules.Add(mod2);
@@ -137,7 +137,6 @@ namespace SE.Core
         private static void CreateTasks(float deltaTime)
         {
             updateTask = Task.Factory.StartNew(() => {
-                // Update area modules.
                 Parallel.ForEach(AreaModules, aMod => {
                     foreach (Emitter e in Emitters) {
                         if (aMod.Shape.Intersects(e.Bounds)) {
@@ -149,7 +148,7 @@ namespace SE.Core
                         }
                     }
                 });
-            }).ContinueWith((t1) => {
+            }).ContinueWith(t1 => {
                 // Update emitters.
                 Parallel.ForEach(VisibleEmitters, emitter => {
                     emitter.Update(deltaTime);
