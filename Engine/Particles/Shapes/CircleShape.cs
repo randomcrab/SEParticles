@@ -41,16 +41,14 @@ namespace SE.Particles.Shapes
         {
             float dx = Math.Abs(point.X - Center.X);
             float dy = Math.Abs(point.Y - Center.Y);
-            float R = radius;
+            float r = radius;
 
-            if (dx > R)
+            if (dx > r || dy > r)
                 return false;
-            if (dy > R)
-                return false;
-            if (dx + dy <= R)
+            if (dx + dy <= r)
                 return true;
 
-            return (dx * dx) + (dy * dy) <= (R * R);
+            return (dx * dx) + (dy * dy) <= (r * r);
         }
 
         public bool Intersects(Vector4 bounds)
