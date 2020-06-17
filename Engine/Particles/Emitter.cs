@@ -24,16 +24,21 @@ namespace SE.Particles
     {
         public IAdditionalData AdditionalData;
         public IEmitterShape Shape;
-        public Space Space = Space.World;
+        public Space Space;
+        public BlendMode BlendMode;
 
         public EmitterConfig Config;
 
         public Vector2 Size {
             get => size;
             set {
-                if (value.X <= 0 || value.Y <= 0)
-                    throw new InvalidEmitterValueException($"{nameof(Size)} must have values greater than zero.");
-
+                if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) {
+                    if (value.X <= 0 || value.Y <= 0)
+                        throw new InvalidEmitterValueException($"{nameof(Size)} must have values greater than zero.");
+                } else {
+                    value.X = Clamp(value.X, 1.0f, float.MaxValue);
+                    value.Y = Clamp(value.X, 1.0f, float.MaxValue);
+                }
                 size = value;
                 Bounds = new Vector4(Position.X - (size.X / 2.0f), Position.Y - (size.Y / 2.0f), size.X, size.Y);
             }
@@ -43,9 +48,13 @@ namespace SE.Particles
         public Vector2 TextureSize {
             get => textureSize;
             set {
-                if (value.X <= 0 || value.Y <= 0)
-                    throw new InvalidEmitterValueException($"{nameof(TextureSize)} must have values greater than zero.");
-
+                if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) {
+                    if (value.X <= 0 || value.Y <= 0)
+                        throw new InvalidEmitterValueException($"{nameof(TextureSize)} must have values greater than zero.");
+                } else {
+                    value.X = Clamp(value.X, 1.0f, float.MaxValue);
+                    value.Y = Clamp(value.X, 1.0f, float.MaxValue);
+                }
                 textureSize = value;
             }
         }
@@ -54,9 +63,15 @@ namespace SE.Particles
         public Vector4 StartRect {
             get => startRect;
             set {
-                if (value.Z <= 0 || value.W <= 0 || value.X > value.Z || value.Y > value.W)
-                    throw new InvalidEmitterValueException($"{nameof(StartRect)} is not a valid source rectangle.");
-                
+                if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) {
+                    if (value.Z <= 0 || value.W <= 0 || value.X > value.Z || value.Y > value.W)
+                        throw new InvalidEmitterValueException($"{nameof(StartRect)} is not a valid source rectangle.");
+                } else {
+                    if (value.Z <= 0)      value.Z = 1.0f;
+                    if (value.W <= 0)      value.W = 1.0f;
+                    if (value.X > value.Z) value.X = value.Z;
+                    if (value.Y > value.W) value.Y = value.W;
+                }
                 startRect = value;
             }
         }
@@ -539,5 +554,12 @@ namespace SE.Particles
     {
         World,
         Local
+    }
+
+    public enum BlendMode
+    {
+        Alpha,
+        Additive,
+        Subtractive
     }
 }
