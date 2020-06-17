@@ -10,6 +10,7 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace SE.Core
 {
+    // TODO: Rename SEParticles with MonoGame support SEParticles.MonoGame, and regular just SEParticles.
     public static class ParticleEngine
     {
         public static readonly QuickList<Emitter> Emitters = new QuickList<Emitter>();

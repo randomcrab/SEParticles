@@ -16,9 +16,7 @@ namespace SE.Particles
         public float SpriteRotation;      // Sprite rotation
         public float InitialLife;
         public float TimeAlive;
-#if MONOGAME
         public Vector4 SourceRectangle;   // Texture source rectangle. X, Y, Width, Height.
-#endif
 
         public static readonly int SizeInBytes = Marshal.SizeOf(typeof(Particle));
 
@@ -36,9 +34,7 @@ namespace SE.Particles
             SpriteRotation = spriteRotation;
             TimeAlive = timeAlive;
             InitialLife = timeAlive;
-#if MONOGAME
             SourceRectangle = Vector4.Zero;
-#endif
         }
     }
 }

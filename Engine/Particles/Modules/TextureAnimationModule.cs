@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using static SE.Particles.ParticleMath;
 using Vector4 = System.Numerics.Vector4;
 
@@ -23,7 +22,7 @@ namespace SE.Particles.Modules
         {
             Particle* tail = arrayPtr + length;
             int totalFrames = SheetRows * SheetColumns;
-            int frameSize = Emitter.Texture.Width / SheetRows;
+            int frameSize = (int) Emitter.TextureSize.X / SheetRows;
             switch (loopMode) {
                 case Mode.Life: {
                     for (Particle* particle = arrayPtr; particle < tail; particle++) {
@@ -36,8 +35,8 @@ namespace SE.Particles.Modules
                         int frameY = (int) Math.Floor((double) frame / SheetRows);
 #endif
                         particle->SourceRectangle = new Vector4(
-                            (frameX * frameSize), 
-                            (frameY * frameSize), 
+                            frameX * frameSize, 
+                            frameY * frameSize, 
                             frameSize, 
                             frameSize);
                     }

@@ -31,15 +31,46 @@ namespace SE.Particles
         public Vector2 Size {
             get => size;
             set {
+                if (value.X <= 0 || value.Y <= 0)
+                    throw new InvalidEmitterValueException($"{nameof(Size)} must have values greater than zero.");
+
                 size = value;
                 Bounds = new Vector4(Position.X - (size.X / 2.0f), Position.Y - (size.Y / 2.0f), size.X, size.Y);
             }
         }
         private Vector2 size;
 
+        public Vector2 TextureSize {
+            get => textureSize;
+            set {
+                if (value.X <= 0 || value.Y <= 0)
+                    throw new InvalidEmitterValueException($"{nameof(TextureSize)} must have values greater than zero.");
+
+                textureSize = value;
+            }
+        }
+        private Vector2 textureSize;
+
+        public Vector4 StartRect {
+            get => startRect;
+            set {
+                if (value.Z <= 0 || value.W <= 0 || value.X > value.Z || value.Y > value.W)
+                    throw new InvalidEmitterValueException($"{nameof(StartRect)} is not a valid source rectangle.");
+                
+                startRect = value;
+            }
+        }
+        private Vector4 startRect;
+
 #if MONOGAME
-        public Texture2D Texture;
-        public Vector4 StartRect; // TODO. Support sprite-sheet animations + random start sprite-sheet source rect.
+        public Texture2D Texture {
+            get => texture;
+            set {
+                texture = value ?? throw new InvalidEmitterValueException(new NullReferenceException());
+                TextureSize = new Vector2(texture.Width, texture.Height);
+            }
+        }
+        private Texture2D texture;
 #endif
 
         internal int ParticleEngineIndex = -1;
@@ -100,6 +131,8 @@ namespace SE.Particles
             Shape = shape ?? new PointEmitterShape();
             Size = size;
             Position = Vector2.Zero;
+            TextureSize = new Vector2(128, 128);         // Dummy value.
+            StartRect = new Vector4(0, 0, 128, 128); // Dummy value.
             switch (ParticleEngine.AllocationMode) {
                 case ParticleAllocationMode.ArrayPool:
                     Particles = ArrayPool<Particle>.Shared.Rent(capacity);
@@ -234,16 +267,12 @@ namespace SE.Particles
                 if (numActive + 1 > Particles.Length)
                     return;
 
-                // NOTE: Was ++.
-                // fixed (Particle* particle = &Particles[numActive++]) {
                 fixed (Particle* particle = &Particles[numActive]) {
                     Shape.Get((float)i / amount, out particle->Position, out particle->Direction);
                     particle->Position += Position;
                     particle->TimeAlive = 0.0f;
-#if MONOGAME
                     particle->SourceRectangle = StartRect;
-#endif
-    
+
                     // Configure particle speed.
                     EmitterConfig.SpeedConfig speed = Config.Speed;
                     switch (Config.Speed.StartValueType) {
