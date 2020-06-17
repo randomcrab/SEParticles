@@ -28,6 +28,11 @@ namespace SE.Particles
             => new Rectangle((int)vector.X, (int)vector.Y, (int)vector.Z, (int)vector.W);
 #endif
 
+        /* Color helper methods are thanks to Jiagg.
+             https://github.com/Jjagg/MgMercury/blob/master/Core/ColorHelper.cs
+           And MonoGame.Extended.
+             https://github.com/craftworkgames/MonoGame.Extended/blob/develop/Source/MonoGame.Extended/ColorHelper.cs */
+
         public static Vector4 ToRgba(this Vector4 hsl) 
             => ToRgba(hsl.X, hsl.Y, hsl.Z, hsl.W);
 

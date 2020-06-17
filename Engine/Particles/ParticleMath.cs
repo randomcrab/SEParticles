@@ -59,10 +59,5 @@ namespace SE.Particles
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ToDegrees(float radians)
             => radians * _180_OVER_PI;
-        
-        /* Color helper methods are thanks to Jiagg.
-             https://github.com/Jjagg/MgMercury/blob/master/Core/ColorHelper.cs
-           And MonoGame.Extended.
-             https://github.com/craftworkgames/MonoGame.Extended/blob/develop/Source/MonoGame.Extended/ColorHelper.cs */
     }
 }
