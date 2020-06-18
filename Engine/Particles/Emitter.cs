@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using SE.Core;
 using SE.Particles.AreaModules;
 using SE.Particles.Modules;
@@ -15,6 +16,8 @@ using static SE.Particles.ParticleMath;
 using Microsoft.Xna.Framework.Graphics;
 #endif
 
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+
 namespace SE.Particles
 {
     /// <summary>
@@ -27,20 +30,31 @@ namespace SE.Particles
         public Space Space;
         public BlendMode BlendMode;
 
+        public bool ParallelEmission = true;
         public EmitterConfig Config;
 
         public Vector2 Size {
             get => size;
             set {
-                if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) {
+                try {
                     if (value.X <= 0 || value.Y <= 0)
                         throw new InvalidEmitterValueException($"{nameof(Size)} must have values greater than zero.");
-                } else {
-                    value.X = Clamp(value.X, 1.0f, float.MaxValue);
-                    value.Y = Clamp(value.X, 1.0f, float.MaxValue);
+                    
+                    size = value;
+                    Bounds = new Vector4(Position.X - (size.X / 2.0f), Position.Y - (size.Y / 2.0f), size.X, size.Y);
+                } catch (Exception) {
+                    if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) 
+                        throw;
+
+                    size = new Vector2(
+                        Clamp(value.X, 1.0f, float.MaxValue), 
+                        Clamp(value.Y, 1.0f, float.MaxValue));
+                    Bounds = new Vector4(
+                        Position.X - (size.X / 2.0f), 
+                        Position.Y - (size.Y / 2.0f), 
+                        size.X, 
+                        size.Y);
                 }
-                size = value;
-                Bounds = new Vector4(Position.X - (size.X / 2.0f), Position.Y - (size.Y / 2.0f), size.X, size.Y);
             }
         }
         private Vector2 size;
@@ -48,14 +62,19 @@ namespace SE.Particles
         public Vector2 TextureSize {
             get => textureSize;
             set {
-                if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) {
+                try {
                     if (value.X <= 0 || value.Y <= 0)
                         throw new InvalidEmitterValueException($"{nameof(TextureSize)} must have values greater than zero.");
-                } else {
-                    value.X = Clamp(value.X, 1.0f, float.MaxValue);
-                    value.Y = Clamp(value.X, 1.0f, float.MaxValue);
+
+                    textureSize = value;
+                } catch (Exception) {
+                    if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) 
+                        throw;
+
+                    textureSize = new Vector2(
+                        Clamp(value.X, 1.0f, float.MaxValue), 
+                        Clamp(value.Y, 1.0f, float.MaxValue));
                 }
-                textureSize = value;
             }
         }
         private Vector2 textureSize;
@@ -63,16 +82,23 @@ namespace SE.Particles
         public Vector4 StartRect {
             get => startRect;
             set {
-                if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) {
+                try {
                     if (value.Z <= 0 || value.W <= 0 || value.X > value.Z || value.Y > value.W)
                         throw new InvalidEmitterValueException($"{nameof(StartRect)} is not a valid source rectangle.");
-                } else {
-                    if (value.Z <= 0)      value.Z = 1.0f;
-                    if (value.W <= 0)      value.W = 1.0f;
-                    if (value.X > value.Z) value.X = value.Z;
-                    if (value.Y > value.W) value.Y = value.W;
+
+                    startRect = value;
+                } catch (Exception) {
+                    if (ParticleEngine.ErrorHandling == ErrorHandling.Throw) 
+                        throw;
+
+                    if (value.Z < 1.0f)         value.Z = 1.0f;
+                    if (value.W < 1.0f)         value.W = 1.0f;
+                    if (value.X < 1.0f)         value.X = 1.0f;
+                    else if (value.X > value.Z) value.X = value.Z;
+                    if (value.Y < 1.0f)         value.Y = 1.0f;
+                    else if (value.Y > value.W) value.Y = value.W;
+                    startRect = value;
                 }
-                startRect = value;
             }
         }
         private Vector4 startRect;
@@ -97,6 +123,7 @@ namespace SE.Particles
         private int[] newParticles;
         private int numActive;
         private int numNew;
+        private int capacity;
         private Vector2 lastPosition;
         private bool isDisposed;
         private bool firstUpdate = true;
@@ -116,7 +143,7 @@ namespace SE.Particles
 
         public Vector4 Bounds { get; private set; } // X, Y, Width, Height
 
-        public int ParticlesLength => Particles.Length;
+        public int ParticlesLength => capacity;
         public ref Particle GetParticle(int index) => ref Particles[index];
         public Span<Particle> ActiveParticles => new Span<Particle>(Particles, 0, numActive);
         private Span<int> NewParticleIndexes => new Span<int>(newParticles, 0, numNew);
@@ -142,6 +169,7 @@ namespace SE.Particles
             if (!ParticleEngine.Initialized)
                 throw new InvalidOperationException("Particle engine has not been initialized. Call ParticleEngine.Initialize() first.");
 
+            this.capacity = capacity;
             Config = new EmitterConfig();
             Shape = shape ?? new PointEmitterShape();
             Size = size;
@@ -235,7 +263,7 @@ namespace SE.Particles
         internal void CheckParticleIntersections(QuickList<Particle> list, AreaModule areaModule)
         {
             Span<Particle> particles = ActiveParticles;
-            for (int i = 0; i < particles.Length; i++) {
+            for (int i = 0; i < capacity; i++) {
                 ref Particle particle = ref particles[i];
                 if (areaModule.Shape.Intersects(particle.Position)) {
                     list.Add(particle);
@@ -275,113 +303,136 @@ namespace SE.Particles
 
         public void Emit(int amount = 1)
         {
+            amount = (int) Clamp(amount, 1.0f, capacity - numActive);
             if (!enabled || !EmissionEnabled)
                 return;
+            if(numActive + amount > capacity)
+                return;
 
-            for (int i = 0; i < amount; i++) {
-                if (numActive + 1 > Particles.Length)
-                    return;
+            bool shouldMultiThread = amount >= 2048 / Environment.ProcessorCount;
+            if (shouldMultiThread && ParallelEmission) {
+                Parallel.For(0, amount, i => {
+                    EmitParticle(i, amount);
+                });
+            } else {
+                for (int i = 0; i < amount; i++) {
+                    EmitParticle(i, amount);
+                }
+            }
 
-                fixed (Particle* particle = &Particles[numActive]) {
-                    Shape.Get((float)i / amount, out particle->Position, out particle->Direction);
-                    particle->Position += Position;
-                    particle->TimeAlive = 0.0f;
-                    particle->SourceRectangle = StartRect;
+            numActive += amount;
+            numNew += amount;
+        }
 
-                    // Configure particle speed.
-                    EmitterConfig.SpeedConfig speed = Config.Speed;
-                    switch (Config.Speed.StartValueType) {
-                        case EmitterConfig.StartingValue.Normal: {
-                            particle->Speed = speed.Min;
-                        } break;
-                        case EmitterConfig.StartingValue.Random: {
-                            particle->Speed = Between(speed.Min, speed.Max, Random.Next());
-                        } break;
-                        case EmitterConfig.StartingValue.RandomCurve: {
+        private void EmitParticle(int i, int maxIteration)
+        {
+            fixed (Particle* particle = &Particles[numActive + i]) {
+                Shape.Get((float)i / maxIteration, out particle->Position, out particle->Direction);
+                particle->Position += Position;
+                particle->TimeAlive = 0.0f;
+                particle->SourceRectangle = StartRect;
+
+                // Configure particle speed.
+                EmitterConfig.SpeedConfig speed = Config.Speed;
+                switch (Config.Speed.StartValueType) {
+                    case EmitterConfig.StartingValue.Normal: {
+                        particle->Speed = speed.Min;
+                    } break;
+                    case EmitterConfig.StartingValue.Random: {
+                        particle->Speed = Between(speed.Min, speed.Max, Random.Next());
+                    } break;
+                    case EmitterConfig.StartingValue.RandomCurve: {
+                        lock (speed.Curve) {
                             particle->Speed = speed.Curve.Evaluate(Random.Next());
-                        } break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                        }
+                    } break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
-                    // Configure particle scale.
-                    EmitterConfig.ScaleConfig scale = Config.Scale;
-                    switch (Config.Scale.StartValueType) {
-                        case EmitterConfig.StartingValue.Normal: {
-                            particle->Scale = scale.Min;
-                        } break;
-                        case EmitterConfig.StartingValue.Random: {
-                            if (scale.TwoDimensions) {
+                // Configure particle scale.
+                EmitterConfig.ScaleConfig scale = Config.Scale;
+                switch (Config.Scale.StartValueType) {
+                    case EmitterConfig.StartingValue.Normal: {
+                        particle->Scale = scale.Min;
+                    } break;
+                    case EmitterConfig.StartingValue.Random: {
+                        if (scale.TwoDimensions) {
+                            particle->Scale = new Vector2(
+                                Between(scale.Min.X, scale.Max.X, Random.Next()),
+                                Between(scale.Min.Y, scale.Max.Y, Random.Next()));
+                        } else {
+                            float s = Random.Next();
+                            particle->Scale = new Vector2(
+                                Between(scale.Min.X, scale.Max.X, s),
+                                Between(scale.Min.Y, scale.Max.Y, s));
+                        }
+                    } break;
+                    case EmitterConfig.StartingValue.RandomCurve: {
+                        if (scale.TwoDimensions) {
+                            lock (scale.Curve) {
                                 particle->Scale = new Vector2(
-                                    Between(scale.Min.X, scale.Max.X, Random.Next()),
-                                    Between(scale.Min.Y, scale.Max.Y, Random.Next()));
-                            } else {
-                                float s = Random.Next();
-                                particle->Scale = new Vector2(
-                                    Between(scale.Min.X, scale.Max.X, s),
-                                    Between(scale.Min.Y, scale.Max.Y, s));
-                            }
-                        } break;
-                        case EmitterConfig.StartingValue.RandomCurve: {
-                            if (scale.TwoDimensions) {
-                                particle->Scale = new Vector2(
-                                    scale.Curve.X.Evaluate(Random.Next()),
+                                    scale.Curve.X.Evaluate(Random.Next()), 
                                     scale.Curve.Y.Evaluate(Random.Next()));
-                            } else {
-                                float s = Random.Next();
-                                particle->Scale = new Vector2(
-                                    scale.Curve.X.Evaluate(s),
-                                    scale.Curve.Y.Evaluate(s));
                             }
-                        } break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                        } else {
+                            float rand = Random.Next();
+                            lock (scale.Curve) { 
+                                particle->Scale = new Vector2(
+                                    scale.Curve.X.Evaluate(rand), 
+                                    scale.Curve.Y.Evaluate(rand));
+                            }
+                        }
+                    } break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
-                    // Configure particle color.
-                    EmitterConfig.ColorConfig color = Config.Color;
-                    switch (Config.Color.StartValueType) {
-                        case EmitterConfig.StartingValue.Normal: {
-                            particle->Color = color.Min;
-                        } break;
-                        case EmitterConfig.StartingValue.Random: {
-                            particle->Color = new Vector4(
-                                Between(color.Min.X, color.Max.X, Random.Next()),
-                                Between(color.Min.Y, color.Max.Y, Random.Next()),
-                                Between(color.Min.Z, color.Max.Z, Random.Next()),
-                                Between(color.Min.W, color.Max.W, Random.Next()));
-                        } break;
-                        case EmitterConfig.StartingValue.RandomCurve: {
+                // Configure particle color.
+                EmitterConfig.ColorConfig color = Config.Color;
+                switch (Config.Color.StartValueType) {
+                    case EmitterConfig.StartingValue.Normal: {
+                        particle->Color = color.Min;
+                    } break;
+                    case EmitterConfig.StartingValue.Random: {
+                        particle->Color = new Vector4(
+                            Between(color.Min.X, color.Max.X, Random.Next()),
+                            Between(color.Min.Y, color.Max.Y, Random.Next()),
+                            Between(color.Min.Z, color.Max.Z, Random.Next()),
+                            Between(color.Min.W, color.Max.W, Random.Next()));
+                    } break;
+                    case EmitterConfig.StartingValue.RandomCurve: {
+                        lock (color.Curve) {
                             particle->Color = new Vector4(
                                 color.Curve.X.Evaluate(Random.Next()), 
                                 color.Curve.Y.Evaluate(Random.Next()),
                                 color.Curve.Z.Evaluate(Random.Next()),
                                 color.Curve.W.Evaluate(Random.Next()));
-                        } break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    // Configure particle life.
-                    EmitterConfig.LifeConfig life = Config.Life;
-                    switch (Config.Life.StartValueType) {
-                        case EmitterConfig.StartingValue.Normal: {
-                            particle->InitialLife = life.Min;
-                        } break;
-                        case EmitterConfig.StartingValue.Random: {
-                            particle->InitialLife = Between(life.Min, life.Max, Random.Next());
-                        } break;
-                        case EmitterConfig.StartingValue.RandomCurve: {
-                            particle->InitialLife = life.Curve.Evaluate(Random.Next());
-                        } break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                        }
+                    } break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
-                newParticles[numNew++] = numActive;
-                numActive++;
+                // Configure particle life.
+                EmitterConfig.LifeConfig life = Config.Life;
+                switch (Config.Life.StartValueType) {
+                    case EmitterConfig.StartingValue.Normal: {
+                        particle->InitialLife = life.Min;
+                    } break;
+                    case EmitterConfig.StartingValue.Random: {
+                        particle->InitialLife = Between(life.Min, life.Max, Random.Next());
+                    } break;
+                    case EmitterConfig.StartingValue.RandomCurve: {
+                        lock (life.Curve) {
+                            particle->InitialLife = life.Curve.Evaluate(Random.Next());
+                        }
+                    } break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
+            newParticles[numNew + i] = numActive + i;
         }
 
         public bool RemoveModule(ParticleModule module) 
@@ -508,7 +559,7 @@ namespace SE.Particles
 
         public Emitter DeepCopy()
         {
-            Emitter emitter = new Emitter(Particles.Length) {
+            Emitter emitter = new Emitter(capacity) {
                 Config = Config.DeepCopy(),
                 Position = Position
             };
